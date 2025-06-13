@@ -1,11 +1,9 @@
+// middleware.ts
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  // Initialize Supabase client and handle session
-  let response = NextResponse.next({
-    request
-  });
+  let response = NextResponse.next();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,9 +17,7 @@ export async function middleware(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
-          response = NextResponse.next({
-            request
-          });
+          response = NextResponse.next();
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           );
@@ -30,37 +26,22 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Get user session
   const {
     data: { user: session }
   } = await supabase.auth.getUser();
 
-  // Handle route-specific redirects
   const currentRoute = request.nextUrl.pathname;
-  if (currentRoute.startsWith('/protected') && !session) {
-    const redirectUrl = new URL(request.url);
-    redirectUrl.pathname = '/signin';
-    return NextResponse.redirect(redirectUrl);
-  }
 
-  if (currentRoute.startsWith('/chat') && !session) {
-    const redirectUrl = new URL(request.url);
-    redirectUrl.pathname = '/signin';
+  if ((currentRoute.startsWith('/protected') || currentRoute.startsWith('/chat')) && !session) {
+    const redirectUrl = new URL('/signin', request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
   return response;
 }
-// Matcher to exclude certain paths from middleware
+
 export const config = {
   matcher: [
-    {
-      source:
-        '/((?!_next/static|_next/image|favicon.ico|favicons/.*\\.png|manifest.webmanifest|manifest.json|api/.*|fonts/.*|sitemap.xml|robots.txt|manifest.json|manifest.webmanifest|\\.well-known/.*).*)',
-      missing: [
-        { type: 'header', key: 'next-router-prefetch' },
-        { type: 'header', key: 'purpose', value: 'prefetch' }
-      ]
-    }
+    '/((?!_next/static|_next/image|favicon.ico|api/.*|fonts/.*|sitemap.xml|robots.txt|\\.well-known/.*).*)'
   ]
 };
