@@ -5,7 +5,7 @@
     }
   },
   "functions": {
-    "api/processdoc.ts": {
+    "app/api/processdoc.ts": {
       "maxDuration": 60
     }
   }
