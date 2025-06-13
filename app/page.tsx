@@ -1,3 +1,5 @@
+export const config = { runtime: 'nodejs' };
+
 import 'server-only';
 import React from 'react';
 import BannerComponent from './components/landingpage/Banner';
