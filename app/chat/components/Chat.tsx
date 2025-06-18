@@ -109,7 +109,7 @@ const ChatComponent: React.FC<ChatProps> = ({
   const apiEndpoint = getApiEndpoint();
 
   // Get messages from chat - DECLARED BEFORE useEffect that uses it
-  const { messages, status, input, setInput, handleSubmit, append } = useChat({
+  const { messages, status } = useChat({
     id: chatId,
     api: apiEndpoint,
     experimental_throttle: 50,
@@ -185,12 +185,12 @@ const ChatComponent: React.FC<ChatProps> = ({
   ];
 
   const handleQuickAction = (action: typeof medicalQuickActions[0]) => {
-    setInput(action.example);
     setShowWelcome(false);
     // Focus the input after a short delay to ensure it's rendered
     setTimeout(() => {
       const textarea = document.querySelector('textarea[placeholder*="medical"]');
       if (textarea && textarea instanceof HTMLTextAreaElement) {
+        textarea.value = action.example;
         textarea.focus();
       }
     }, 100);
@@ -637,10 +637,6 @@ const ChatComponent: React.FC<ChatProps> = ({
                 selectedOption={optimisticOption}
                 handleModelTypeChange={handleModelTypeChange}
                 handleOptionChange={handleOptionChange}
-                input={input}
-                setInput={setInput}
-                handleSubmit={handleSubmit}
-                status={status}
               />
             </div>
           </div>
