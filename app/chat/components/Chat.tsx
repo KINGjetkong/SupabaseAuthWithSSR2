@@ -84,28 +84,6 @@ const ChatComponent: React.FC<ChatProps> = ({
   const [isMobile, setIsMobile] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
 
-  // Check if mobile and handle sidebar
-  useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (!mobile) {
-        setSidebarOpen(true); // Auto-open on desktop
-      }
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Show chat interface when messages exist
-  useEffect(() => {
-    if (messages.length > 0) {
-      setShowWelcome(false);
-    }
-  }, [messages.length]);
-
   // Determine API endpoint based on model type
   const getApiEndpoint = () => {
     switch (optimisticModelType) {
@@ -120,7 +98,7 @@ const ChatComponent: React.FC<ChatProps> = ({
 
   const apiEndpoint = getApiEndpoint();
 
-  // Get messages from chat
+  // Get messages from chat - MOVED BEFORE useEffect that uses messages
   const { messages, status } = useChat({
     id: 'chat',
     api: apiEndpoint,
@@ -136,6 +114,28 @@ const ChatComponent: React.FC<ChatProps> = ({
   });
 
   const { mutate } = useSWRConfig();
+
+  // Check if mobile and handle sidebar
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setSidebarOpen(true); // Auto-open on desktop
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Show chat interface when messages exist - NOW AFTER messages is declared
+  useEffect(() => {
+    if (messages.length > 0) {
+      setShowWelcome(false);
+    }
+  }, [messages.length]);
 
   // Medical quick actions with intent classification
   const medicalQuickActions = [
