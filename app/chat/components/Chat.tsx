@@ -24,33 +24,23 @@ import ReasoningContent from './tools/Reasoning';
 import SourceView from './tools/SourceView';
 import DocumentSearchTool from './tools/DocumentChatTool';
 import WebsiteSearchTool from './tools/WebsiteChatTool';
-import MessageInput from './ChatMessageInput';
 import { toast } from 'sonner';
 
 // Icons from Lucide React
 import { 
-  User, 
-  Bot, 
   Copy, 
   CheckCircle, 
   FileIcon, 
   Stethoscope, 
-  Heart, 
   Activity, 
-  Shield, 
   Clock,
-  Sparkles,
   BookOpen,
-  Search,
   FileText,
   Calculator,
   Users,
-  Settings,
   ChevronDown,
-  Pill,
   ClipboardList,
   UserCheck,
-  Microscope,
   Menu,
   X,
   Plus,
@@ -58,9 +48,6 @@ import {
   Moon,
   Send,
   Paperclip,
-  ChevronRight,
-  Home,
-  MessageSquare,
   Folder
 } from 'lucide-react';
 
@@ -69,14 +56,6 @@ interface ChatProps {
   chatId: string;
   initialModelType: string;
   initialSelectedOption: string;
-}
-
-// Medical AI Preferences Interface
-interface MedicalPreferences {
-  responseStyle: 'concise' | 'detailed' | 'structured';
-  knowledgeLevel: 'student' | 'resident' | 'attending' | 'specialist';
-  citationDensity: 'minimal' | 'standard' | 'comprehensive';
-  searchMode: 'evidence-only' | 'combined' | 'ai-only';
 }
 
 const ChatComponent: React.FC<ChatProps> = ({
@@ -105,14 +84,6 @@ const ChatComponent: React.FC<ChatProps> = ({
   const [isMobile, setIsMobile] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
 
-  // Medical AI Preferences State
-  const [medicalPreferences, setMedicalPreferences] = useState<MedicalPreferences>({
-    responseStyle: 'detailed',
-    knowledgeLevel: 'attending',
-    citationDensity: 'standard',
-    searchMode: 'combined'
-  });
-
   // Check if mobile and handle sidebar
   useEffect(() => {
     const checkMobile = () => {
@@ -133,21 +104,7 @@ const ChatComponent: React.FC<ChatProps> = ({
     if (messages.length > 0) {
       setShowWelcome(false);
     }
-  }, []);
-
-  const handleModelTypeChange = async (newValue: string) => {
-    startTransition(async () => {
-      setOptimisticModelType(newValue);
-      await setModelSettings(newValue, optimisticOption);
-    });
-  };
-
-  const handleOptionChange = async (newValue: string) => {
-    startTransition(async () => {
-      setOptimisticOption(newValue);
-      await setModelSettings(optimisticModelType, newValue);
-    });
-  };
+  }, [messages.length]);
 
   // Determine API endpoint based on model type
   const getApiEndpoint = () => {
@@ -635,7 +592,7 @@ const ChatComponent: React.FC<ChatProps> = ({
                       </li>
                     );
                   })}
-                  <ChatScrollAnchor trackVisibility status={status} />
+                  <ChatScrollAnchor trackVisibility={status} />
                 </ul>
               </div>
             </div>
@@ -670,7 +627,7 @@ const ChatComponent: React.FC<ChatProps> = ({
               <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-1">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
                     <span>GPT-4 Medical</span>
                   </div>
                   <span>Evidence-based responses</span>
