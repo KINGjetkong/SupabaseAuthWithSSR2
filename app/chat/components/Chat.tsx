@@ -94,7 +94,7 @@ const ChatComponent: React.FC<ChatProps> = ({
     },
 
     onError: (error) => {
-      toast.error(error.message || 'An error occurred'); // This could lead to sensitive information exposure. A general error message is safer.
+      toast.error(error.message || 'An error occurred');
     }
   });
 
@@ -336,12 +336,11 @@ const ChatComponent: React.FC<ChatProps> = ({
               </li>
             );
           })}
-          <ChatScrollAnchor trackVisibility status={status} />
+          <ChatScrollAnchor trackVisibility={status === 'streaming'} status={status} />
         </ul>
       )}
 
       <div className="sticky bottom-0 mt-auto max-w-[720px] mx-auto w-full z-5 pb-2">
-        {/*Separate message input component, to avoid re-rendering the chat messages when typing */}
         <MessageInput
           chatId={chatId}
           apiEndpoint={apiEndpoint}
@@ -359,4 +358,5 @@ const ChatComponent: React.FC<ChatProps> = ({
 };
 
 export default ChatComponent;
+
 
