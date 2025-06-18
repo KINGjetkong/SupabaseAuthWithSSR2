@@ -24,6 +24,7 @@ import ReasoningContent from './tools/Reasoning';
 import SourceView from './tools/SourceView';
 import DocumentSearchTool from './tools/DocumentChatTool';
 import WebsiteSearchTool from './tools/WebsiteChatTool';
+import MessageInput from './ChatMessageInput';
 import { toast } from 'sonner';
 
 // Icons from Lucide React
@@ -46,8 +47,6 @@ import {
   Plus,
   Sun,
   Moon,
-  Send,
-  Paperclip,
   Folder
 } from 'lucide-react';
 
@@ -84,6 +83,20 @@ const ChatComponent: React.FC<ChatProps> = ({
   const [isMobile, setIsMobile] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
 
+  const handleModelTypeChange = async (newValue: string) => {
+    startTransition(async () => {
+      setOptimisticModelType(newValue);
+      await setModelSettings(newValue, optimisticOption);
+    });
+  };
+
+  const handleOptionChange = async (newValue: string) => {
+    startTransition(async () => {
+      setOptimisticOption(newValue);
+      await setModelSettings(optimisticModelType, newValue);
+    });
+  };
+
   // Determine API endpoint based on model type
   const getApiEndpoint = () => {
     switch (optimisticModelType) {
@@ -98,7 +111,7 @@ const ChatComponent: React.FC<ChatProps> = ({
 
   const apiEndpoint = getApiEndpoint();
 
-  // Get messages from chat - MOVED BEFORE useEffect that uses messages
+  // Get messages from chat - DECLARED BEFORE useEffect that uses it
   const { messages, status } = useChat({
     id: 'chat',
     api: apiEndpoint,
@@ -592,49 +605,25 @@ const ChatComponent: React.FC<ChatProps> = ({
                       </li>
                     );
                   })}
-                  <ChatScrollAnchor trackVisibility={status} />
+                  <ChatScrollAnchor trackVisibility={status === 'streaming'} />
                 </ul>
               </div>
             </div>
           )}
 
           {/* Input Area */}
-          <div className="border-t border-border bg-background p-4">
-            <div className="max-w-4xl mx-auto">
-              <div className="relative">
-                <Textarea
-                  placeholder="Ask about medical conditions, treatments, drug interactions..."
-                  className="min-h-[60px] pr-24 resize-none border-2 focus:border-primary"
-                />
-                <div className="absolute bottom-3 right-3 flex items-center space-x-2">
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-                  <Select defaultValue="gpt-4-medical">
-                    <SelectTrigger className="w-32 h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="gpt-4-medical">GPT-4 Medical</SelectItem>
-                      <SelectItem value="claude-medical">Claude Medical</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button size="icon" className="h-8 w-8 bg-primary hover:bg-primary/90">
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-1">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    <span>GPT-4 Medical</span>
-                  </div>
-                  <span>Evidence-based responses</span>
-                </div>
-                <span>Press Enter to send</span>
-              </div>
-            </div>
+          <div className="sticky bottom-0 mt-auto max-w-[720px] mx-auto w-full z-5 pb-2">
+            <MessageInput
+              chatId={chatId}
+              apiEndpoint={apiEndpoint}
+              currentChat={messages}
+              option={optimisticOption}
+              currentChatId={currentChatId}
+              modelType={optimisticModelType}
+              selectedOption={optimisticOption}
+              handleModelTypeChange={handleModelTypeChange}
+              handleOptionChange={handleOptionChange}
+            />
           </div>
         </div>
       </div>
