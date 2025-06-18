@@ -1,6 +1,6 @@
 import React, { type ReactNode } from 'react';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Poppins } from 'next/font/google';
 import Footer from '@/app/components/ui/Footer/Footer';
 import { getSession } from '@/lib/server/supabase';
 import NavBar from '@/app/components/ui/Navbar/TopBar';
@@ -9,17 +9,17 @@ import { Toaster } from '@/components/ui/sonner';
 
 import './globals.css';
 
-const inter = Inter({
+const poppins = Poppins({
   subsets: ['latin'],
   display: 'swap',
   adjustFontFallback: false,
-  variable: '--font-Inter'
+  variable: '--font-poppins'
 });
 export const metadata: Metadata = {
-  metadataBase: new URL('http://localhost:3000/'),
-  title: 'Supabase SSR Auth Example',
+  metadataBase: new URL('https://mdevidence.ai/'),
+  title: 'MDevidence.ai',
   description:
-    'An example demonstrating server-side rendering with authentication using Supabase.'
+    'MDevidence.ai demonstrates server-side rendering with Supabase authentication and AI integrations.'
 };
 
 export default function RootLayout({
@@ -31,7 +31,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={poppins.className}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

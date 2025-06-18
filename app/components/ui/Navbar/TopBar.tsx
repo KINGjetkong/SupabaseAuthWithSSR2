@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import Sitemark from './SitemarkIcon';
+import SiteLogo from './SiteLogo';
 import SignOut from './SignOut';
 import { ModeToggle } from '@/components/ui/toggleButton';
 
@@ -50,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
         <div className="flex items-center w-full h-full px-8 mx-auto">
           <div className="flex items-center mr-8">
             <Link href="/" passHref>
-              <Sitemark />
+              <SiteLogo />
             </Link>
           </div>
 
@@ -135,11 +135,14 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
             <Menu className="h-6 w-6" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0">
+        <SheetContent
+          side="left"
+          className="w-full max-w-[300px] sm:max-w-[400px] p-0"
+        >
           <div className="flex flex-col h-full">
             <div className="flex justify-between items-center p-6">
               <Link href="/" className="cursor-pointer">
-                <Sitemark />
+                <SiteLogo />
               </Link>
               {/* Theme Toggle Button - Mobile */}
               <ModeToggle />

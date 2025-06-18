@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Inter } from 'next/font/google';
+import { Poppins } from 'next/font/google';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -12,17 +12,17 @@ interface GlobalErrorProps {
   reset: () => void;
 }
 
-const inter = Inter({
+const poppins = Poppins({
   subsets: ['latin'],
   display: 'swap',
   adjustFontFallback: false,
-  variable: '--font-Inter'
+  variable: '--font-poppins'
 });
 
 export default function GlobalError({ error }: GlobalErrorProps) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={poppins.className}>
         <Card className="min-h-screen w-full max-w-md mx-auto flex flex-col items-center justify-center shadow-lg">
           <CardHeader className="text-center space-y-1">
             <div className="p-3 rounded-full bg-destructive/10 w-fit mx-auto mb-4">
