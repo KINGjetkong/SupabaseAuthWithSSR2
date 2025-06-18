@@ -7,10 +7,7 @@ import { useSWRConfig } from 'swr';
 import { ChatScrollAnchor } from '../hooks/chat-scroll-anchor';
 import { setModelSettings } from '../actions';
 import Link from 'next/link';
-// Shadcn UI components
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Accordion,
   AccordionContent,
@@ -187,9 +184,9 @@ const ChatComponent: React.FC<ChatProps> = ({
   ];
 
   const handleQuickAction = (action: typeof medicalQuickActions[0]) => {
-    const input = document.querySelector('textarea[placeholder*="medical"]') as HTMLTextAreaElement;
+    const input = document.querySelector('textarea[placeholder*="medical"]');
     if (input) {
-      input.value = action.example;
+      (input as HTMLTextAreaElement).value = action.example;
       input.focus();
       setShowWelcome(false);
     }
