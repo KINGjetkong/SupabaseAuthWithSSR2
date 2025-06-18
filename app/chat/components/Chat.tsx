@@ -605,7 +605,7 @@ const ChatComponent: React.FC<ChatProps> = ({
                       </li>
                     );
                   })}
-                  <ChatScrollAnchor trackVisibility={status === 'streaming'} />
+                  <ChatScrollAnchor trackVisibility={status === 'streaming'} status={status} />
                 </ul>
               </div>
             </div>
