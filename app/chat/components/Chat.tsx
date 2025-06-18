@@ -8,6 +8,7 @@ import { ChatScrollAnchor } from '../hooks/chat-scroll-anchor';
 import { setModelSettings } from '../actions';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Accordion,
   AccordionContent,
@@ -21,7 +22,6 @@ import ReasoningContent from './tools/Reasoning';
 import SourceView from './tools/SourceView';
 import DocumentSearchTool from './tools/DocumentChatTool';
 import WebsiteSearchTool from './tools/WebsiteChatTool';
-import MessageInput from './ChatMessageInput';
 import { toast } from 'sonner';
 
 // Icons from Lucide React
@@ -44,7 +44,9 @@ import {
   Plus,
   Sun,
   Moon,
-  Folder
+  Folder,
+  Send,
+  Paperclip
 } from 'lucide-react';
 
 interface ChatProps {
@@ -108,11 +110,10 @@ const ChatComponent: React.FC<ChatProps> = ({
 
   const apiEndpoint = getApiEndpoint();
 
-  // Get messages from chat - DECLARED BEFORE useEffect that uses it
-  const { messages, status } = useChat({
+  // Get messages from chat with proper integration
+  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
     id: chatId,
     api: apiEndpoint,
-    experimental_throttle: 50,
     initialMessages: currentChat,
     onFinish: async () => {
       if (chatId === currentChatId) return;
@@ -120,7 +121,7 @@ const ChatComponent: React.FC<ChatProps> = ({
     },
     onError: (error) => {
       console.error('Chat error:', error);
-      toast.error(error.message || 'An error occurred while sending your message');
+      toast.error(error.message || 'Failed to send message. Please try again.');
     }
   });
 
@@ -141,7 +142,7 @@ const ChatComponent: React.FC<ChatProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Show chat interface when messages exist - NOW AFTER messages is declared
+  // Show chat interface when messages exist
   useEffect(() => {
     if (messages.length > 0) {
       setShowWelcome(false);
@@ -185,12 +186,18 @@ const ChatComponent: React.FC<ChatProps> = ({
   ];
 
   const handleQuickAction = (action: typeof medicalQuickActions[0]) => {
+    // Use the handleInputChange from useChat to set the input value
+    const syntheticEvent = {
+      target: { value: action.example }
+    } as React.ChangeEvent<HTMLTextAreaElement>;
+    
+    handleInputChange(syntheticEvent);
     setShowWelcome(false);
-    // Focus the input after a short delay to ensure it's rendered
+    
+    // Focus the textarea
     setTimeout(() => {
       const textarea = document.querySelector('textarea[placeholder*="medical"]');
       if (textarea && textarea instanceof HTMLTextAreaElement) {
-        textarea.value = action.example;
         textarea.focus();
       }
     }, 100);
@@ -203,6 +210,15 @@ const ChatComponent: React.FC<ChatProps> = ({
   const toggleTheme = () => {
     setDarkMode(!darkMode);
     document.documentElement.classList.toggle('dark');
+  };
+
+  // Handle form submission
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (input.trim()) {
+      setShowWelcome(false);
+      handleSubmit(e);
+    }
   };
 
   // Recent conversations (mock data)
@@ -392,46 +408,19 @@ const ChatComponent: React.FC<ChatProps> = ({
                 <div className="space-y-4 max-w-3xl mx-auto">
                   <h3 className="text-lg font-semibold text-foreground">Try these examples:</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card 
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => handleQuickAction(medicalQuickActions[0])}
-                    >
-                      <CardContent className="p-4">
-                        <p className="text-sm text-muted-foreground">
-                          Draft a prior authorization letter for Ozempic for Type 2 diabetes
-                        </p>
-                      </CardContent>
-                    </Card>
-                    <Card 
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => handleQuickAction(medicalQuickActions[1])}
-                    >
-                      <CardContent className="p-4">
-                        <p className="text-sm text-muted-foreground">
-                          Calculate CHA2DS2-VASc score for 72-year-old female with hypertension and diabetes
-                        </p>
-                      </CardContent>
-                    </Card>
-                    <Card 
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => handleQuickAction(medicalQuickActions[2])}
-                    >
-                      <CardContent className="p-4">
-                        <p className="text-sm text-muted-foreground">
-                          What are the latest AHA/ACC guidelines for hypertension in CKD patients?
-                        </p>
-                      </CardContent>
-                    </Card>
-                    <Card 
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => handleQuickAction(medicalQuickActions[3])}
-                    >
-                      <CardContent className="p-4">
-                        <p className="text-sm text-muted-foreground">
-                          Construct a workup for new-onset atrial fibrillation
-                        </p>
-                      </CardContent>
-                    </Card>
+                    {medicalQuickActions.map((action, index) => (
+                      <Card 
+                        key={index}
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleQuickAction(action)}
+                      >
+                        <CardContent className="p-4">
+                          <p className="text-sm text-muted-foreground">
+                            {action.example}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 </div>
 
@@ -459,18 +448,6 @@ const ChatComponent: React.FC<ChatProps> = ({
                       setIsCopied(true);
                       setTimeout(() => setIsCopied(false), 1000);
                     };
-
-                    // Filter tool invocation parts
-                    const toolInvocationParts = !isUserMessage
-                      ? message.parts?.filter((part) => part.type === 'tool-invocation') || []
-                      : [];
-
-                    const hasToolInvocations = toolInvocationParts.length > 0;
-
-                    // Group parts by type
-                    const textParts = message.parts?.filter((part) => part.type === 'text') || [];
-                    const reasoningParts = message.parts?.filter((part) => part.type === 'reasoning') || [];
-                    const sourceParts = message.parts?.filter((part) => part.type === 'source') || [];
 
                     return (
                       <li key={`${message.id}-${index}`} className="my-4">
@@ -534,110 +511,83 @@ const ChatComponent: React.FC<ChatProps> = ({
                           </CardHeader>
 
                           <CardContent className="py-0 px-4">
-                            {/* Render text parts */}
-                            {textParts.map((part, partIndex) => (
-                              <div key={`text-${partIndex}`} className="prose prose-sm max-w-none dark:prose-invert">
-                                <MemoizedMarkdown
-                                  content={part.text}
-                                  id={`${isUserMessage ? 'user' : 'assistant'}-text-${message.id}-${partIndex}`}
-                                />
-                              </div>
-                            ))}
-
-                            {/* Render reasoning parts */}
-                            {!isUserMessage && reasoningParts.map((part, partIndex) => (
-                              <div key={`reasoning-${partIndex}`} className="mt-4">
-                                <ReasoningContent details={part.details} messageId={message.id} />
-                              </div>
-                            ))}
-
-                            {/* Render source parts */}
-                            {!isUserMessage && sourceParts.length > 0 && (
-                              <div className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <BookOpen className="h-4 w-4 text-primary" />
-                                  <span className="text-sm font-semibold text-primary">Medical Sources</span>
-                                </div>
-                                <SourceView sources={sourceParts.map((part) => part.source)} />
-                              </div>
-                            )}
-
-                            {/* Display attached files */}
-                            {isUserMessage && message.experimental_attachments && message.experimental_attachments.length > 0 && (
-                              <div className="mt-4 pt-4 border-t border-primary/20">
-                                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                                  <FileIcon className="h-4 w-4 text-primary" />
-                                  Medical Documents:
-                                </h4>
-                                <div className="space-y-2">
-                                  {message.experimental_attachments.map((attachment, idx) => (
-                                    <div key={`attachment-${idx}`} className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
-                                      <FileIcon className="h-4 w-4 text-primary" />
-                                      <Link className="font-medium text-primary hover:underline flex-1" href={`?file=${attachment.name}`}>
-                                        {attachment.name}
-                                      </Link>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Render tool invocations */}
-                            {hasToolInvocations && (
-                              <div className="mt-6">
-                                <Accordion type="single" defaultValue="tool-invocation" collapsible className="w-full border border-primary/20 rounded-lg bg-primary/5">
-                                  <AccordionItem value="tool-invocation" className="border-0">
-                                    <AccordionTrigger className="px-4 py-3 font-medium hover:no-underline">
-                                      <div className="flex items-center gap-2">
-                                        <Activity className="h-4 w-4 text-primary" />
-                                        <span className="text-primary">Medical Research Tools Used</span>
-                                      </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="px-4 pb-4">
-                                      <div className="space-y-4">
-                                        {toolInvocationParts.map((part) => {
-                                          const toolName = part.toolInvocation.toolName;
-                                          const toolId = part.toolInvocation.toolCallId;
-                                          switch (toolName) {
-                                            case 'searchUserDocument':
-                                              return <DocumentSearchTool key={toolId} toolInvocation={part.toolInvocation} />;
-                                            case 'websiteSearchTool':
-                                              return <WebsiteSearchTool key={toolId} toolInvocation={part.toolInvocation} />;
-                                            default:
-                                              return null;
-                                          }
-                                        })}
-                                      </div>
-                                    </AccordionContent>
-                                  </AccordionItem>
-                                </Accordion>
-                              </div>
-                            )}
+                            <div className="prose prose-sm max-w-none dark:prose-invert">
+                              <MemoizedMarkdown
+                                content={message.content}
+                                id={`${isUserMessage ? 'user' : 'assistant'}-${message.id}-${index}`}
+                              />
+                            </div>
                           </CardContent>
                         </Card>
                       </li>
                     );
                   })}
-                  <ChatScrollAnchor trackVisibility={status === 'streaming'} status={status} />
+                  <ChatScrollAnchor trackVisibility={isLoading} status={isLoading ? 'streaming' : 'ready'} />
                 </ul>
               </div>
             </div>
           )}
 
-          {/* Input Area - Fixed positioning */}
+          {/* Input Area - Custom implementation */}
           <div className="sticky bottom-0 bg-background border-t border-border p-4 flex-shrink-0">
             <div className="max-w-[720px] mx-auto w-full">
-              <MessageInput
-                chatId={chatId}
-                apiEndpoint={apiEndpoint}
-                currentChat={messages}
-                option={optimisticOption}
-                currentChatId={currentChatId}
-                modelType={optimisticModelType}
-                selectedOption={optimisticOption}
-                handleModelTypeChange={handleModelTypeChange}
-                handleOptionChange={handleOptionChange}
-              />
+              <form onSubmit={onSubmit} className="relative">
+                <div className="relative flex items-end space-x-2">
+                  <div className="flex-1 relative">
+                    <Textarea
+                      value={input}
+                      onChange={handleInputChange}
+                      placeholder="Ask about medical conditions, treatments, drug interactions..."
+                      className="min-h-[60px] max-h-[200px] resize-none pr-12 bg-background border-border focus:border-primary"
+                      disabled={isLoading}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          if (input.trim()) {
+                            onSubmit(e as any);
+                          }
+                        }
+                      }}
+                    />
+                    <div className="absolute right-2 bottom-2 flex items-center space-x-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="submit"
+                        size="icon"
+                        className="h-8 w-8 bg-primary hover:bg-primary/90"
+                        disabled={!input.trim() || isLoading}
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Status indicators */}
+                <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                  <div className="flex items-center space-x-4">
+                    <span className="flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span>GPT-4 Medical</span>
+                    </span>
+                    <span>Evidence-based responses</span>
+                  </div>
+                  <span>Press Enter to send</span>
+                </div>
+                
+                {error && (
+                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
+                    Error: {error.message}
+                  </div>
+                )}
+              </form>
             </div>
           </div>
         </div>
