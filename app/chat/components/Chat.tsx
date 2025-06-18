@@ -109,8 +109,8 @@ const ChatComponent: React.FC<ChatProps> = ({
   const apiEndpoint = getApiEndpoint();
 
   // Get messages from chat - DECLARED BEFORE useEffect that uses it
-  const { messages, status } = useChat({
-    id: 'chat',
+  const { messages, status, input, setInput, handleSubmit, append } = useChat({
+    id: chatId,
     api: apiEndpoint,
     experimental_throttle: 50,
     initialMessages: currentChat,
@@ -119,7 +119,8 @@ const ChatComponent: React.FC<ChatProps> = ({
       await mutate((key) => Array.isArray(key) && key[0] === 'chatPreviews');
     },
     onError: (error) => {
-      toast.error(error.message || 'An error occurred');
+      console.error('Chat error:', error);
+      toast.error(error.message || 'An error occurred while sending your message');
     }
   });
 
@@ -184,12 +185,15 @@ const ChatComponent: React.FC<ChatProps> = ({
   ];
 
   const handleQuickAction = (action: typeof medicalQuickActions[0]) => {
-    const input = document.querySelector('textarea[placeholder*="medical"]');
-    if (input && input instanceof HTMLTextAreaElement) {
-      input.value = action.example;
-      input.focus();
-      setShowWelcome(false);
-    }
+    setInput(action.example);
+    setShowWelcome(false);
+    // Focus the input after a short delay to ensure it's rendered
+    setTimeout(() => {
+      const textarea = document.querySelector('textarea[placeholder*="medical"]');
+      if (textarea && textarea instanceof HTMLTextAreaElement) {
+        textarea.focus();
+      }
+    }, 100);
   };
 
   const toggleSidebar = () => {
@@ -210,9 +214,9 @@ const ChatComponent: React.FC<ChatProps> = ({
   ];
 
   return (
-    <div className="h-screen bg-background text-foreground antialiased flex flex-col">
+    <div className="h-screen bg-background text-foreground antialiased flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-xl border-b border-border shadow-sm h-14">
+      <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-xl border-b border-border shadow-sm h-14 flex-shrink-0">
         <div className="flex items-center justify-between w-full h-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center space-x-3">
             {/* Mobile menu button */}
@@ -268,10 +272,10 @@ const ChatComponent: React.FC<ChatProps> = ({
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           ${isMobile ? 'fixed inset-y-0 left-0 z-40 w-64' : 'relative w-64'}
           bg-background border-r border-border transition-transform duration-300 ease-in-out
-          flex flex-col
+          flex flex-col flex-shrink-0
         `}>
           {/* Sidebar Header */}
-          <div className="p-4 border-b border-border">
+          <div className="p-4 border-b border-border flex-shrink-0">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-foreground">MDEvidence AI</h2>
               {isMobile && (
@@ -287,7 +291,7 @@ const ChatComponent: React.FC<ChatProps> = ({
           </div>
 
           {/* Sidebar Tabs */}
-          <div className="flex border-b border-border">
+          <div className="flex border-b border-border flex-shrink-0">
             <button
               className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'chat-history'
@@ -346,10 +350,10 @@ const ChatComponent: React.FC<ChatProps> = ({
         )}
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           {showWelcome ? (
             /* Welcome Screen */
-            <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 bg-gradient-to-b from-primary/5 to-background">
+            <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 bg-gradient-to-b from-primary/5 to-background overflow-y-auto">
               <div className="w-full max-w-4xl mx-auto text-center space-y-8">
                 {/* Main Title */}
                 <div className="space-y-4">
@@ -388,28 +392,40 @@ const ChatComponent: React.FC<ChatProps> = ({
                 <div className="space-y-4 max-w-3xl mx-auto">
                   <h3 className="text-lg font-semibold text-foreground">Try these examples:</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Card 
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleQuickAction(medicalQuickActions[0])}
+                    >
                       <CardContent className="p-4">
                         <p className="text-sm text-muted-foreground">
                           Draft a prior authorization letter for Ozempic for Type 2 diabetes
                         </p>
                       </CardContent>
                     </Card>
-                    <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Card 
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleQuickAction(medicalQuickActions[1])}
+                    >
                       <CardContent className="p-4">
                         <p className="text-sm text-muted-foreground">
                           Calculate CHA2DS2-VASc score for 72-year-old female with hypertension and diabetes
                         </p>
                       </CardContent>
                     </Card>
-                    <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Card 
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleQuickAction(medicalQuickActions[2])}
+                    >
                       <CardContent className="p-4">
                         <p className="text-sm text-muted-foreground">
                           What are the latest AHA/ACC guidelines for hypertension in CKD patients?
                         </p>
                       </CardContent>
                     </Card>
-                    <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Card 
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleQuickAction(medicalQuickActions[3])}
+                    >
                       <CardContent className="p-4">
                         <p className="text-sm text-muted-foreground">
                           Construct a workup for new-onset atrial fibrillation
@@ -429,7 +445,7 @@ const ChatComponent: React.FC<ChatProps> = ({
             </div>
           ) : (
             /* Chat Interface */
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col overflow-hidden">
               {/* Chat Messages */}
               <div className="flex-1 overflow-y-auto">
                 <ul className="flex-1 w-full mx-auto max-w-[1000px] px-4 py-4">
@@ -608,19 +624,25 @@ const ChatComponent: React.FC<ChatProps> = ({
             </div>
           )}
 
-          {/* Input Area */}
-          <div className="sticky bottom-0 mt-auto max-w-[720px] mx-auto w-full z-5 pb-2">
-            <MessageInput
-              chatId={chatId}
-              apiEndpoint={apiEndpoint}
-              currentChat={messages}
-              option={optimisticOption}
-              currentChatId={currentChatId}
-              modelType={optimisticModelType}
-              selectedOption={optimisticOption}
-              handleModelTypeChange={handleModelTypeChange}
-              handleOptionChange={handleOptionChange}
-            />
+          {/* Input Area - Fixed positioning */}
+          <div className="sticky bottom-0 bg-background border-t border-border p-4 flex-shrink-0">
+            <div className="max-w-[720px] mx-auto w-full">
+              <MessageInput
+                chatId={chatId}
+                apiEndpoint={apiEndpoint}
+                currentChat={messages}
+                option={optimisticOption}
+                currentChatId={currentChatId}
+                modelType={optimisticModelType}
+                selectedOption={optimisticOption}
+                handleModelTypeChange={handleModelTypeChange}
+                handleOptionChange={handleOptionChange}
+                input={input}
+                setInput={setInput}
+                handleSubmit={handleSubmit}
+                status={status}
+              />
+            </div>
           </div>
         </div>
       </div>
