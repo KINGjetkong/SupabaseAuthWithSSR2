@@ -7,7 +7,6 @@ import Profile from './components/landingpage/Profile';
 import { Separator } from '@/components/ui/separator';
 import FeatureCard from './components/landingpage/FeatureCard';
 import Testimonials from './components/landingpage/Testimonials';
-import { getSession } from '@/lib/server/supabase';
 
 export default function LandingPage() {
   return (
