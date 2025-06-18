@@ -18,10 +18,10 @@ const Footer: React.FC = () => {
     <footer className="bg-gray-800 text-white mt-auto pt-4">
       <div className="max-w-[1600px] mx-auto px-4 flex flex-wrap justify-center items-start gap-4">
         {/* Contact Section */}
-        <div className="w-[48%] sm:w-[48%] md:w-[21%] lg:w-[21%] xl:w-[30%] flex flex-col gap-3 p-0">
+        <div className="w-full sm:w-[48%] md:w-[21%] lg:w-[21%] xl:w-[30%] flex flex-col gap-3 p-0 text-center sm:text-left">
           <h5 className="text-xl font-bold">Contact</h5>
-          <p className="text-sm text-white">Example Company Name</p>
-          <p className="text-sm text-white">123 Example Street, City 12345</p>
+          <p className="text-sm text-white">MDevidence.ai</p>
+          <p className="text-sm text-white">123 Research Drive, City 12345</p>
           <p className="text-sm text-white mb-1">ID: 12345678</p>
           <Link href="#" className="text-sky-300 hover:text-sky-200">
             Privacy Policy
@@ -37,7 +37,7 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Information Section */}
-        <div className="w-[42%] sm:w-[42%] md:w-[23%] lg:w-[23%] xl:w-[23%] flex flex-col gap-3 p-0">
+        <div className="w-full sm:w-[42%] md:w-[23%] lg:w-[23%] xl:w-[23%] flex flex-col gap-3 p-0 text-center sm:text-left">
           <h5 className="text-xl font-bold">Information:</h5>
           <Link href="#" className="text-sky-300 hover:text-sky-200">
             About Us
@@ -67,7 +67,7 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Newsletter Section */}
-        <div className="w-full sm:w-full md:w-[41%] lg:w-[41%] xl:w-[41%] flex flex-col gap-3 px-1">
+        <div className="w-full sm:w-full md:w-[41%] lg:w-[41%] xl:w-[41%] flex flex-col gap-3 px-1 text-center sm:text-left items-center sm:items-start">
           <h5 className="text-xl font-bold">Subscribe to Our Newsletter</h5>
           <p className="text-base text-white">
             📧 Regular updates about our services
@@ -88,13 +88,15 @@ const Footer: React.FC = () => {
 
       <Separator className="mt-4 bg-white max-w-[1580px] mx-auto" />
 
-      <div className="max-w-[1600px] mx-auto px-4 flex justify-between items-center py-2">
+      <div
+        className="max-w-[1600px] mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2 py-2 text-center sm:text-left"
+      >
         <div className="flex-grow">
           <Link href="#" className="text-white hover:text-gray-200">
-            Example Company &copy; {new Date().getFullYear()}
+            MDevidence.ai &copy; {new Date().getFullYear()}
           </Link>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center justify-center sm:justify-end">
           <Button
             size="icon"
             variant="ghost"

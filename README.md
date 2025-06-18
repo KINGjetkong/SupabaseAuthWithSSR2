@@ -1,4 +1,4 @@
-# Supabase Auth with SSR + RAG + Tavily AI Web Search 🔍
+# MDevidence.ai - Supabase Auth with SSR + RAG + Tavily AI Web Search 🔍
 
 ## Project Showcase
 
@@ -29,7 +29,8 @@ You can find the videos located inside the public folder!
   - [Database Setup](#database-setup)
   - [Document Processing Setup](#document-processing-setup)
   - [Storage Setup and RLS](#storage-setup-and-rls)
-  - [Environment Variables](#environment-variables)
+- [Environment Variables](#environment-variables)
+- [Deployment](#deployment)
 - [Email Templates](#email-templates)
   - [Confirm Your Signup](#confirm-your-signup)
   - [Invite User Email](#invite-user-email)
@@ -68,19 +69,19 @@ You can find the videos located inside the public folder!
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/ElectricCodeGuy/SupabaseAuthWithSSR.git
+   git clone https://github.com/yourusername/MDevidenceAI.git
    ```
 
 2. **Navigate to the Project Directory**
 
    ```bash
-   cd SupabaseAuthWithSSR
+   cd MDevidenceAI
    ```
 
 3. **Install Required Packages**
 
    ```bash
-   npm install
+   npm install --legacy-peer-deps
    ```
 
 ### Database Setup
@@ -531,6 +532,16 @@ For Openai, Perplexity and Upstash/Redis
 - `UPSTASH_REDIS_REST_URL=`
 - `UPSTASH_REDIS_REST_TOKEN=`
 
+## Deployment
+
+To deploy MDevidence.ai on Vercel:
+
+1. Install the [Vercel CLI](https://vercel.com/docs/cli).
+2. Run `vercel` in the project directory and follow the prompts.
+3. When ready for production, run `vercel --prod`.
+
+Make sure your environment variables are configured in Vercel before deploying.
+
 ## 📧 Email Templates
 
 To ensure that the authentication flow works correctly with the API routes provided in this codebase, please update your email templates in the Supabase project settings according to the templates provided below:
@@ -680,7 +691,3 @@ npx madge \
 
 🔖 Licensed under the MIT License. See LICENSE.md for details.
 
-```
-
-```
-# trigger clean deploy

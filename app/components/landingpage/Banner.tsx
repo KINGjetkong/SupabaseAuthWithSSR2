@@ -34,7 +34,7 @@ const BannerComponent: React.FC<BannerProps> = ({ session }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center p-6 bg-muted/50">
       {/* Image Grid */}
-      <div className="md:col-span-8 h-[600px] hidden md:block overflow-hidden rounded-xl">
+      <div className="order-1 md:order-none md:col-span-8 h-64 md:h-[600px] overflow-hidden rounded-xl">
         <Image
           src={FrontPageImage}
           priority
@@ -43,11 +43,11 @@ const BannerComponent: React.FC<BannerProps> = ({ session }) => {
         />
       </div>
 
-      <div className="md:col-span-4">
+      <div className="order-0 md:order-none md:col-span-4">
         <h4 className="text-primary font-bold text-2xl mb-3">
           {isSessionAvailable
             ? `Welcome back, ${userEmail ?? 'User'}!`
-            : 'Empower Your Next.js App with Supabase Auth'}
+            : 'Empower Your Next.js App with MDevidence.ai'}
         </h4>
         <p className="mb-6 text-muted-foreground">
           {isSessionAvailable
