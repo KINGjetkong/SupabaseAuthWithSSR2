@@ -14,7 +14,6 @@ export default function Banner() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      // Navigate to chat with query
       window.location.href = `/chat?q=${encodeURIComponent(searchQuery)}`
     }
   }
@@ -73,7 +72,6 @@ export default function Banner() {
 
   return (
     <div className="min-h-screen medical-gradient">
-      {/* Header */}
       <header className="border-b border-border/20 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -91,7 +89,7 @@ export default function Banner() {
             </div>
             <div className="flex items-center space-x-4">
               <Badge variant="secondary" className="bg-green-500/20 text-green-600 border-green-500/30">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2" />
                 Online
               </Badge>
               <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
@@ -102,9 +100,7 @@ export default function Banner() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Hero Section */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-8">
             <Badge className="bg-primary/20 text-primary border-primary/30 px-4 py-2 text-sm">
@@ -121,7 +117,6 @@ export default function Banner() {
             AI-powered medical guidance based on current evidence
           </p>
 
-          {/* Search Bar */}
           <form onSubmit={handleSearch} className="mb-12">
             <div className="medical-search rounded-xl p-4 max-w-3xl mx-auto transition-all">
               <div className="flex items-center space-x-4">
@@ -140,7 +135,6 @@ export default function Banner() {
             </div>
           </form>
 
-          {/* Quick Actions */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
             {quickActions.map((action, index) => (
               <Link key={index} href={action.href}>
@@ -155,7 +149,6 @@ export default function Banner() {
             ))}
           </div>
 
-          {/* Trust Indicators */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
             {stats.map((stat, index) => (
               <Card key={index} className="medical-card border-primary/20">
@@ -171,7 +164,6 @@ export default function Banner() {
           </div>
         </div>
 
-        {/* Features Section */}
         <div className="mb-16">
           <h3 className="text-3xl font-bold text-foreground text-center mb-12">
             Comprehensive Medical AI Features
@@ -194,7 +186,6 @@ export default function Banner() {
           </div>
         </div>
 
-        {/* CTA Section */}
         <Card className="medical-card text-center p-8 border-primary/20">
           <CardContent className="p-0">
             <div className="flex items-center justify-center mb-6">
@@ -222,7 +213,6 @@ export default function Banner() {
           </CardContent>
         </Card>
 
-        {/* Medical Disclaimer */}
         <div className="mt-12 text-center">
           <p className="text-xs text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             <strong>Medical Disclaimer:</strong> MDEvidence provides information for educational purposes only. 
@@ -234,5 +224,3 @@ export default function Banner() {
     </div>
   )
 }
-
-
