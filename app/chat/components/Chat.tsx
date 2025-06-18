@@ -1,52 +1,61 @@
-'use client';
+"use client";
 
-import React, { useState, useOptimistic, startTransition, useEffect } from 'react';
-import { useChat, type Message } from '@ai-sdk/react';
-import { useParams } from 'next/navigation';
-import { useSWRConfig } from 'swr';
-import { ChatScrollAnchor } from '../hooks/chat-scroll-anchor';
-import { setModelSettings } from '../actions';
-import Link from 'next/link';
+import React, {
+  useState,
+  useEffect,
+  useOptimistic,
+  startTransition,
+} from "react";
+import { useChat, type Message } from "@ai-sdk/react";
+import { useParams } from "next/navigation";
+import { useSWRConfig } from "swr";
+import Link from "next/link";
 
-// Shadcn UI components
-import { Button } from '@/components/ui/button';
+// shadcn/ui
+import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger
-} from '@/components/ui/accordion';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import MemoizedMarkdown from './tools/MemoizedMarkdown';
-import ReasoningContent from './tools/Reasoning';
-import SourceView from './tools/SourceView';
-import DocumentSearchTool from './tools/DocumentChatTool';
-import WebsiteSearchTool from './tools/WebsiteChatTool';
-import MessageInput from './ChatMessageInput';
-import { toast } from 'sonner';
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
 
-// Icons from Lucide React
-import { 
-  User, 
-  Bot, 
-  Copy, 
-  CheckCircle, 
-  FileIcon,
+// local components
+import MemoizedMarkdown from "./tools/MemoizedMarkdown";
+import ReasoningContent from "./tools/Reasoning";
+import SourceView from "./tools/SourceView";
+import DocumentSearchTool from "./tools/DocumentChatTool";
+import WebsiteSearchTool from "./tools/WebsiteChatTool";
+import MessageInput from "./ChatMessageInput";
+import { ChatScrollAnchor } from "../hooks/chat-scroll-anchor";
+import { setModelSettings } from "../actions";
+
+import { toast } from "sonner";
+
+// Medical icons - enhanced for healthcare
+import {
   Menu,
   X,
-  Plus,
   Sun,
   Moon,
-  Folder,
+  Copy,
+  CheckCircle,
+  FileIcon,
+  Activity,
   Clock,
+  Stethoscope,
   UserCheck,
   FileText,
   Calculator,
   ClipboardList,
   Users,
-  ChevronDown
-} from 'lucide-react';
+  BookOpen,
+  Plus,
+  ChevronDown,
+} from "lucide-react";
 
 interface ChatProps {
   currentChat?: Message[];
@@ -55,198 +64,246 @@ interface ChatProps {
   initialSelectedOption: string;
 }
 
-const ChatComponent: React.FC<ChatProps> = ({
+/* -------------------------------------------------------------------------- */
+/*                    MEDICAL AI CHAT - ENHANCED STYLING                     */
+/* -------------------------------------------------------------------------- */
+
+const EnhancedChatComponent: React.FC<ChatProps> = ({
   currentChat,
   chatId,
   initialModelType,
-  initialSelectedOption
+  initialSelectedOption,
 }) => {
+  /* ----------------------------- ROUTER PARAM ----------------------------- */
   const param = useParams();
   const currentChatId = param.id as string;
 
+  /* --------------------------- OPTIMISTIC STATE --------------------------- */
   const [optimisticModelType, setOptimisticModelType] = useOptimistic<
     string,
     string
-  >(initialModelType, (_, newValue) => newValue);
-  const [isCopied, setIsCopied] = useState(false);
+  >(initialModelType, (_, v) => v);
   const [optimisticOption, setOptimisticOption] = useOptimistic<string, string>(
     initialSelectedOption,
-    (_, newValue) => newValue
+    (_, v) => v
   );
 
-  // UI State for enhanced interface
+  /* ------------------------------ UI STATES ------------------------------ */
+  const [isCopied, setIsCopied] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("chat-history");
   const [darkMode, setDarkMode] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
 
-  const handleModelTypeChange = async (newValue: string) => {
+  /* --------------------------- HANDLE SETTINGS --------------------------- */
+  const handleModelTypeChange = async (val: string) => {
     startTransition(async () => {
-      setOptimisticModelType(newValue);
-      await setModelSettings(newValue, optimisticOption);
+      setOptimisticModelType(val);
+      await setModelSettings(val, optimisticOption);
     });
   };
 
-  const handleOptionChange = async (newValue: string) => {
+  const handleOptionChange = async (val: string) => {
     startTransition(async () => {
-      setOptimisticOption(newValue);
-      await setModelSettings(optimisticModelType, newValue);
+      setOptimisticOption(val);
+      await setModelSettings(optimisticModelType, val);
     });
   };
 
-  // Determine API endpoint based on model type
-  const getApiEndpoint = () => {
+  /* ------------------------- API ENDPOINT HELPER ------------------------- */
+  const apiEndpoint = (() => {
     switch (optimisticModelType) {
-      case 'perplex':
-        return '/api/perplexity';
-      case 'website':
-        return '/api/websitechat';
+      case "perplex":
+        return "/api/perplexity";
+      case "website":
+        return "/api/websitechat";
       default:
-        return '/api/chat';
+        return "/api/chat";
     }
-  };
+  })();
 
-  const apiEndpoint = getApiEndpoint();
-
-  // Get messages from chat
+  /* ------------------------------ CHAT HOOK ------------------------------ */
+  const { mutate } = useSWRConfig();
   const { messages, status } = useChat({
-    id: 'chat',
+    id: "chat",
     api: apiEndpoint,
     experimental_throttle: 50,
     initialMessages: currentChat,
     onFinish: async () => {
       if (chatId === currentChatId) return;
-
-      await mutate((key) => Array.isArray(key) && key[0] === 'chatPreviews');
+      await mutate((key) => Array.isArray(key) && key[0] === "chatPreviews");
     },
-
-    onError: (error) => {
-      toast.error(error.message || 'An error occurred');
-    }
+    onError: (e) => toast.error(e.message || "Something went wrong"),
   });
 
-  const { mutate } = useSWRConfig();
-
-  // Check if mobile and handle sidebar
+  /* ---------------------------- EFFECTS / MEDIA --------------------------- */
   useEffect(() => {
-    const checkMobile = () => {
+    const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      if (!mobile) {
-        setSidebarOpen(true); // Auto-open on desktop
-      }
+      if (!mobile) setSidebarOpen(true);
     };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Show chat interface when messages exist
+  // Hide welcome when messages exist
   useEffect(() => {
     if (messages.length > 0) {
       setShowWelcome(false);
     }
   }, [messages.length]);
 
-  // Quick actions for the welcome screen
-  const quickActions = [
-    {
-      title: "AI Chat",
-      description: "Start a conversation",
-      icon: <Bot className="h-5 w-5" />,
-      example: "Experience the power of AI-driven conversations with our chat template. Ask questions on any topic and get informative responses instantly.",
-      color: "bg-primary/10 text-primary border-primary/20",
-    },
-    {
-      title: "Document Search",
-      description: "Search through documents",
-      icon: <FileText className="h-5 w-5" />,
-      example: "Search through your uploaded documents for specific information",
-      color: "bg-primary/10 text-primary border-primary/20",
-    },
-    {
-      title: "Website Analysis",
-      description: "Analyze website content",
-      icon: <ClipboardList className="h-5 w-5" />,
-      example: "Analyze and extract information from websites",
-      color: "bg-primary/10 text-primary border-primary/20",
-    },
-    {
-      title: "General Help",
-      description: "Get assistance",
-      icon: <Users className="h-5 w-5" />,
-      example: "Get help with any questions or tasks you need assistance with",
-      color: "bg-primary/10 text-primary border-primary/20",
-    },
-  ];
-
-  const handleQuickAction = (action: typeof quickActions[0]) => {
-    const input = document.querySelector('textarea') as HTMLTextAreaElement;
-    if (input) {
-      input.value = action.example;
-      input.focus();
-      setShowWelcome(false);
-    }
-  };
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
+  /* --------------------------- THEME TOGGLER --------------------------- */
   const toggleTheme = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle('dark');
+    setDarkMode((prev) => !prev);
+    document.documentElement.classList.toggle("dark");
   };
 
-  // Recent conversations (mock data)
-  const recentConversations = [
-    { title: "AI Chat Session", time: "2 hours ago" },
-    { title: "Document Analysis", time: "Yesterday" },
-    { title: "Website Research", time: "2 days ago" },
-    { title: "General Questions", time: "1 week ago" },
+  /* ------------------------- MEDICAL QUICK ACTIONS ------------------------- */
+  const medicalQuickActions = [
+    {
+      title: "Prior Authorization",
+      description: "Generate prior auth letters",
+      icon: <FileText className="h-5 w-5" />,
+      example: "Draft a prior authorization letter for Ozempic for Type 2 diabetes",
+      color: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
+    },
+    {
+      title: "Clinical Calculations",
+      description: "Calculate medical scores",
+      icon: <Calculator className="h-5 w-5" />,
+      example: "Calculate CHA2DS2-VASc score for 72-year-old female with hypertension and diabetes",
+      color: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
+    },
+    {
+      title: "Clinical Guidelines",
+      description: "Access treatment protocols",
+      icon: <ClipboardList className="h-5 w-5" />,
+      example: "What are the latest AHA/ACC guidelines for hypertension in CKD patients?",
+      color: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
+    },
+    {
+      title: "Patient Care",
+      description: "Clinical decision support",
+      icon: <Users className="h-5 w-5" />,
+      example: "Construct a workup for new-onset atrial fibrillation",
+      color: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
+    }
   ];
 
-  return (
-    <div className="h-screen bg-background text-foreground antialiased flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-xl border-b border-border shadow-sm h-14">
-        <div className="flex items-center justify-between w-full h-full px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center space-x-3">
-            {/* Mobile menu button */}
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleSidebar}>
-              <Menu className="h-5 w-5" />
-            </Button>
+  const handleQuickAction = (action: typeof medicalQuickActions[0]) => {
+    setShowWelcome(false);
+    // Focus the input after a short delay
+    setTimeout(() => {
+      const textarea = document.querySelector('textarea');
+      if (textarea && textarea instanceof HTMLTextAreaElement) {
+        textarea.value = action.example;
+        textarea.focus();
+      }
+    }, 100);
+  };
 
-            {/* Logo */}
+  /* ---------------------------------------------------------------------- */
+  /*                               RENDERING                               */
+  /* ---------------------------------------------------------------------- */
+
+  /* ------------------------------ SIDEBAR ------------------------------ */
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full w-64 bg-background border-r border-border">
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-foreground">MDEvidence AI</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white">
+          <Plus className="h-4 w-4 mr-2" />
+          New Medical Chat
+        </Button>
+      </div>
+
+      {/* Chat History */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">RECENT CONVERSATIONS</h3>
+        
+        {/* Mock medical conversations */}
+        {[
+          { title: "Hypertension treatment guidelines", time: "2 hours ago" },
+          { title: "Diabetes medication dosing", time: "Yesterday" },
+          { title: "Antibiotic resistance patterns", time: "2 days ago" },
+          { title: "Cardiac risk assessment", time: "1 week ago" }
+        ].map((conv, index) => (
+          <div key={index} className="p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors">
+            <div className="flex items-start space-x-2">
+              <div className="w-2 h-2 bg-orange-600 rounded-full mt-2 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{conv.title}</p>
+                <p className="text-xs text-muted-foreground">{conv.time}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  /* ----------------------------- MAIN JSX ----------------------------- */
+  return (
+    <div className="h-screen flex flex-col bg-background text-foreground">
+      {/* ---------------------------- MEDICAL HEADER ---------------------------- */}
+      <header className="sticky top-0 z-40 h-14 border-b border-border bg-background/90 backdrop-blur-md">
+        <div className="flex h-full items-center justify-between px-3 sm:px-4 lg:px-6">
+          <div className="flex items-center gap-3">
+            {/* mobile menu */}
+            {isMobile && (
+              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden h-8 w-8">
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0">
+                  <SidebarContent />
+                </SheetContent>
+              </Sheet>
+            )}
+
+            {/* Medical logo */}
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center">
-                <Bot className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 bg-gradient-to-br from-orange-600 to-orange-700 rounded-lg flex items-center justify-center">
+                <Stethoscope className="w-4 h-4 text-white" />
               </div>
-              <div className="hidden sm:block">
-                <h1 className="font-bold text-lg text-foreground">AI Chat Assistant</h1>
-              </div>
+              <Link href="/" className="text-lg font-bold">
+                <span className="text-orange-600">MDEvidence</span> AI
+              </Link>
             </div>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link href="https://www.lovguiden.dk/" target="_blank" rel="noopener" className="text-muted-foreground hover:text-foreground transition-colors">
-              Lovguiden
+            <Link href="/evidence" className="text-muted-foreground hover:text-foreground transition-colors">
+              Evidence Search
             </Link>
             <Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors">
               About
             </Link>
-            <Link href="/chat" className="text-primary font-semibold">
-              Chat
+            <Link href="/chat" className="text-orange-600 font-semibold">
+              Medical Chat
             </Link>
           </div>
 
-          {/* Right side buttons */}
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon" onClick={toggleTheme}>
-              {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          {/* right actions */}
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8">
+              {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             <Button variant="outline" size="sm" className="hidden sm:flex">
               Profile
@@ -257,390 +314,273 @@ const ChatComponent: React.FC<ChatProps> = ({
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <div
-          className={`
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-          ${isMobile ? "fixed inset-y-0 left-0 z-40 w-64" : "relative w-64"}
-          bg-background border-r border-border transition-transform duration-300 ease-in-out
-          flex flex-col
-        `}
-        >
-          {/* Sidebar Header */}
-          <div className="p-4 border-b border-border">
-            <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-foreground">AI Assistant</h2>
-              {isMobile && (
-                <Button variant="ghost" size="icon" onClick={toggleSidebar}>
-                  <X className="h-5 w-5" />
-                </Button>
-              )}
-            </div>
-            <Button className="w-full mt-3 bg-primary hover:bg-primary/90 text-white">
-              <Plus className="h-4 w-4 mr-2" />
-              New Chat
-            </Button>
-          </div>
+        {/* Desktop sidebar */}
+        {!isMobile && sidebarOpen && <SidebarContent />}
 
-          {/* Sidebar Tabs */}
-          <div className="flex border-b border-border">
-            <button
-              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === "chat-history"
-                  ? "text-primary border-b-2 border-primary bg-primary/5"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              onClick={() => setActiveTab("chat-history")}
-            >
-              Chat History
-            </button>
-            <button
-              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === "files"
-                  ? "text-primary border-b-2 border-primary bg-primary/5"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              onClick={() => setActiveTab("files")}
-            >
-              Files
-            </button>
-          </div>
-
-          {/* Sidebar Content */}
-          <div className="flex-1 overflow-y-auto p-4">
-            {activeTab === "chat-history" && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">RECENT CONVERSATIONS</h3>
-                {recentConversations.map((conv, index) => (
-                  <div key={index} className="p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors">
-                    <div className="flex items-start space-x-2">
-                      <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{conv.title}</p>
-                        <p className="text-xs text-muted-foreground">{conv.time}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {activeTab === "files" && (
-              <div className="text-center py-8">
-                <Folder className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-sm text-muted-foreground">No files uploaded yet</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Sidebar Overlay */}
-        {isMobile && sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30" onClick={toggleSidebar} />}
-
-        {/* Main Content */}
+        {/* ------------------------- CHAT AREA ------------------------- */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {showWelcome ? (
-            /* Welcome Screen */
-            <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 bg-gradient-to-b from-primary/5 to-background">
-              <div className="w-full max-w-4xl mx-auto text-center space-y-8">
-                {/* Main Title */}
-                <div className="space-y-4">
-                  <div className="inline-flex items-center px-3 py-1 bg-primary/10 rounded-full text-primary text-sm font-medium">
-                    <Bot className="w-4 h-4 mr-2" />
-                    AI-Powered Chat Assistant
+          <div className="flex-1 overflow-y-auto">
+            {messages.length === 0 ? (
+              /* Medical Welcome Screen */
+              <div className="flex flex-col items-center justify-center h-full px-4 py-8 bg-gradient-to-b from-orange-50/50 to-background">
+                <div className="w-full max-w-4xl mx-auto text-center space-y-8">
+                  {/* Medical Title */}
+                  <div className="space-y-4">
+                    <div className="inline-flex items-center px-3 py-1 bg-orange-100 rounded-full text-orange-700 text-sm font-medium">
+                      <Stethoscope className="w-4 h-4 mr-2" />
+                      AI-Powered Medical Guidance
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
+                      <span className="text-orange-600 italic font-serif">MDEvidence</span>
+                    </h1>
+                    <p className="text-lg text-muted-foreground">
+                      AI-powered medical guidance based on current evidence
+                    </p>
                   </div>
-                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
-                    Chat with our <span className="text-primary">AI Assistant</span>
-                  </h1>
-                  <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    Experience the power of AI-driven conversations with our chat template. Ask questions on any topic and get informative responses instantly.
-                  </p>
-                  <p className="font-bold text-foreground/80">
-                    Check out{' '}
-                    <Link
-                      href="https://www.lovguiden.dk/"
-                      target="_blank"
-                      rel="noopener"
-                      className="text-xl text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      Lovguiden
-                    </Link>
-                    , a Danish legal AI platform, for a real-world example of AI in action.
-                  </p>
-                </div>
 
-                {/* Quick Actions Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
-                  {quickActions.map((action, index) => (
-                    <Card
-                      key={index}
-                      className={`cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${action.color} border`}
-                      onClick={() => handleQuickAction(action)}
-                    >
-                      <CardContent className="p-6 text-center">
-                        <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                          {action.icon}
-                        </div>
-                        <h3 className="font-semibold text-sm mb-2">{action.title}</h3>
-                        <p className="text-xs opacity-80">{action.description}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                  {/* Medical Quick Actions Grid */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                    {medicalQuickActions.map((action, index) => (
+                      <Card 
+                        key={index} 
+                        className={`cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${action.color} border`}
+                        onClick={() => handleQuickAction(action)}
+                      >
+                        <CardContent className="p-6 text-center">
+                          <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            {action.icon}
+                          </div>
+                          <h3 className="font-semibold text-sm mb-2">{action.title}</h3>
+                          <p className="text-xs opacity-80">{action.description}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
 
-                {/* Trust Message */}
-                <div className="text-center">
-                  <h2 className="text-2xl font-semibold text-foreground/80">
-                    Start chatting now and enjoy the AI experience!
-                  </h2>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Chat Interface */
-            <div className="flex-1 flex flex-col">
-              {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto">
-                <ul className="flex-1 w-full mx-auto max-w-[1000px] px-4 py-4">
-                  {messages.map((message, index) => {
-                    const isUserMessage = message.role === 'user';
-                    const copyToClipboard = (str: string) => {
-                      window.navigator.clipboard.writeText(str);
-                    };
-                    const handleCopy = (content: string) => {
-                      copyToClipboard(content);
-                      setIsCopied(true);
-                      setTimeout(() => setIsCopied(false), 1000);
-                    };
-
-                    // First filter the tool invocation parts to check if we need the accordion
-                    const toolInvocationParts = !isUserMessage
-                      ? message.parts?.filter(
-                          (part) => part.type === 'tool-invocation'
-                        ) || []
-                      : [];
-
-                    const hasToolInvocations = toolInvocationParts.length > 0;
-
-                    // Group parts by type for ordered rendering
-                    const textParts =
-                      message.parts?.filter((part) => part.type === 'text') || [];
-                    const reasoningParts =
-                      message.parts?.filter((part) => part.type === 'reasoning') || [];
-                    const sourceParts =
-                      message.parts?.filter((part) => part.type === 'source') || [];
-
-                    return (
-                      <li key={`${message.id}-${index}`} className="my-4">
-                        <Card
-                          className={`transition-all hover:shadow-lg ${
-                            isUserMessage
-                              ? 'bg-primary/5 border-primary/20'
-                              : 'bg-card border-border/50'
-                          }`}
+                  {/* Example Prompts */}
+                  <div className="space-y-4 max-w-3xl mx-auto">
+                    <h3 className="text-lg font-semibold text-foreground">Try these examples:</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {medicalQuickActions.map((action, index) => (
+                        <Card 
+                          key={index}
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleQuickAction(action)}
                         >
-                          <CardHeader className="pb-2 px-4">
-                            <div className="flex items-center gap-3">
-                              {isUserMessage ? (
-                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-md">
-                                  <UserCheck className="h-5 w-5 text-white" />
-                                </div>
-                              ) : (
-                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-primary/20">
-                                  <Bot className="h-5 w-5 text-primary" />
-                                </div>
-                              )}
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <h3 className="font-semibold text-sm">
-                                    {isUserMessage ? 'You' : 'AI Assistant'}
-                                  </h3>
-                                  {!isUserMessage && (
-                                    <Badge
-                                      variant="secondary"
-                                      className="bg-primary/20 text-primary border-primary/30 text-xs"
-                                    >
-                                      AI Response
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {message.createdAt
-                                    ? new Date(message.createdAt).toLocaleTimeString(
-                                        [],
-                                        {
-                                          hour: '2-digit',
-                                          minute: '2-digit',
-                                          hour12: false
-                                        }
-                                      )
-                                    : new Date().toLocaleTimeString([], {
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        hour12: false
-                                      })}
-                                </p>
-                              </div>
-                              {!isUserMessage && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 hover:bg-primary/10"
-                                  onClick={() => handleCopy(message.content)}
-                                >
-                                  {isCopied ? (
-                                    <CheckCircle
-                                      size={16}
-                                      className="text-green-600 dark:text-green-400"
-                                    />
-                                  ) : (
-                                    <Copy size={16} className="text-muted-foreground hover:text-primary" />
-                                  )}
-                                </Button>
-                              )}
-                            </div>
-                          </CardHeader>
-
-                          <CardContent className="py-0 px-4 pb-4">
-                            {/* Render text parts first (main message content) */}
-                            {textParts.map((part, partIndex) => (
-                              <MemoizedMarkdown
-                                key={`text-${partIndex}`}
-                                content={part.text}
-                                id={`${isUserMessage ? 'user' : 'assistant'}-text-${
-                                  message.id
-                                }-${partIndex}`}
-                              />
-                            ))}
-
-                            {/* Then render reasoning parts (only for assistant messages) */}
-                            {!isUserMessage &&
-                              reasoningParts.map((part, partIndex) => (
-                                <div key={`reasoning-${partIndex}`} className="mt-4">
-                                  <ReasoningContent
-                                    details={part.details}
-                                    messageId={message.id}
-                                  />
-                                </div>
-                              ))}
-
-                            {/* Then render source parts (only for assistant messages) */}
-                            {!isUserMessage && sourceParts.length > 0 && (
-                              <div className="mt-2">
-                                <SourceView
-                                  sources={sourceParts.map((part) => part.source)}
-                                />
-                              </div>
-                            )}
-
-                            {/* Display attached files in user messages */}
-                            {isUserMessage &&
-                              message.experimental_attachments &&
-                              message.experimental_attachments.length > 0 && (
-                                <div className="mt-4 pt-4 border-t">
-                                  <h4 className="text-sm font-medium mb-2">
-                                    Attached Files:
-                                  </h4>
-                                  <div className="space-y-2">
-                                    {message.experimental_attachments.map(
-                                      (attachment, idx) => (
-                                        <div
-                                          key={`attachment-${idx}`}
-                                          className="flex items-center gap-2 p-2 bg-background rounded border"
-                                        >
-                                          <FileIcon className="h-4 w-4 text-blue-500" />
-                                          <Link
-                                            className="font-medium text-blue-600 dark:text-blue-400 hover:underline flex-1"
-                                            href={`?file=${attachment.name}`}
-                                          >
-                                            {attachment.name}
-                                          </Link>
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                            {/* Render all tool invocations in a single accordion */}
-                            {hasToolInvocations && (
-                              <div className="mt-6">
-                                <Accordion
-                                  type="single"
-                                  defaultValue="tool-invocation"
-                                  collapsible
-                                  className="w-full border rounded-lg"
-                                >
-                                  <AccordionItem
-                                    value="tool-invocation"
-                                    className="border-0"
-                                  >
-                                    <AccordionTrigger className="px-4 py-3 font-medium hover:no-underline">
-                                      <div className="flex items-center gap-2">
-                                        <Bot className="h-4 w-4" />
-                                        <span>AI Tools Used</span>
-                                      </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="px-4 pb-4">
-                                      <div className="space-y-4">
-                                        {toolInvocationParts.map((part) => {
-                                          const toolName = part.toolInvocation.toolName;
-                                          const toolId = part.toolInvocation.toolCallId;
-                                          switch (toolName) {
-                                            case 'searchUserDocument':
-                                              return (
-                                                <DocumentSearchTool
-                                                  key={toolId}
-                                                  toolInvocation={part.toolInvocation}
-                                                />
-                                              );
-                                            case 'websiteSearchTool':
-                                              return (
-                                                <WebsiteSearchTool
-                                                  key={toolId}
-                                                  toolInvocation={part.toolInvocation}
-                                                />
-                                              );
-                                            default:
-                                              return null;
-                                          }
-                                        })}
-                                      </div>
-                                    </AccordionContent>
-                                  </AccordionItem>
-                                </Accordion>
-                              </div>
-                            )}
+                          <CardContent className="p-4">
+                            <p className="text-sm text-muted-foreground">
+                              {action.example}
+                            </p>
                           </CardContent>
                         </Card>
-                      </li>
-                    );
-                  })}
-                  <ChatScrollAnchor trackVisibility status={status} />
-                </ul>
-              </div>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Message Input */}
-              <div className="sticky bottom-0 mt-auto max-w-[720px] mx-auto w-full z-5 pb-2 px-4">
-                <MessageInput
-                  chatId={chatId}
-                  apiEndpoint={apiEndpoint}
-                  currentChat={messages}
-                  option={optimisticOption}
-                  currentChatId={currentChatId}
-                  modelType={optimisticModelType}
-                  selectedOption={optimisticOption}
-                  handleModelTypeChange={handleModelTypeChange}
-                  handleOptionChange={handleOptionChange}
-                />
+                  {/* Trust Message */}
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Trusted by <span className="text-orange-600 font-semibold">healthcare professionals</span> worldwide for evidence-based medical guidance
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <ul className="w-full mx-auto max-w-[1000px] px-2 sm:px-4 py-2 sm:py-4">
+                {messages.map((m, idx) => {
+                  const isUser = m.role === "user";
+
+                  const textParts = m.parts?.filter((p) => p.type === "text") || [];
+                  const reasoningParts = m.parts?.filter((p) => p.type === "reasoning") || [];
+                  const sourceParts = m.parts?.filter((p) => p.type === "source") || [];
+                  const toolInvocationParts = !isUser
+                    ? m.parts?.filter((p) => p.type === "tool-invocation") || []
+                    : [];
+                  const hasTools = toolInvocationParts.length > 0;
+
+                  const handleCopy = () => {
+                    navigator.clipboard.writeText(m.content || "");
+                    setIsCopied(true);
+                    setTimeout(() => setIsCopied(false), 800);
+                  };
+
+                  return (
+                    <li key={`${m.id}-${idx}`} className="my-2 sm:my-4">
+                      <Card
+                        className={`transition shadow-sm hover:shadow-md border ${
+                          isUser ? "bg-orange-50/50 border-orange-200" : "bg-card border-border/60"
+                        }`}
+                      >
+                        {/* ------------ Header row ------------- */}
+                        <CardHeader className="pb-2 px-3 sm:px-4">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div
+                              className={`rounded-full flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 ${
+                                isUser 
+                                  ? "bg-gradient-to-br from-orange-600 to-orange-700" 
+                                  : "bg-gradient-to-br from-orange-100 to-orange-50 border border-orange-200"
+                              }`}
+                            >
+                              {isUser ? (
+                                <UserCheck className="h-4 w-4 text-white" />
+                              ) : (
+                                <Stethoscope className="h-4 w-4 text-orange-600" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-xs sm:text-sm truncate">
+                                  {isUser ? "Healthcare Professional" : "MDEvidence AI"}
+                                </h3>
+                                {!isUser && (
+                                  <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200 text-xs">
+                                    Evidence-Based
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {m.createdAt
+                                  ? new Date(m.createdAt).toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      hour12: false,
+                                    })
+                                  : ""}
+                              </p>
+                            </div>
+                            {!isUser && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 sm:h-8 sm:w-8 hover:bg-orange-100"
+                                onClick={handleCopy}
+                              >
+                                {isCopied ? (
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <Copy className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </CardHeader>
+
+                        {/* ------------ Content ------------- */}
+                        <CardContent className="pt-0 pb-3 sm:pb-4 px-3 sm:px-4 space-y-4">
+                          {/* text */}
+                          {textParts.map((p, pIdx) => (
+                            <div key={`txt-${pIdx}`} className="prose prose-sm max-w-none dark:prose-invert">
+                              <MemoizedMarkdown
+                                content={p.text}
+                                id={`${isUser ? "user" : "assistant"}-text-${m.id}-${pIdx}`}
+                              />
+                            </div>
+                          ))}
+
+                          {/* reasoning */}
+                          {!isUser &&
+                            reasoningParts.map((p, rIdx) => (
+                              <ReasoningContent key={`rsn-${rIdx}`} details={p.details} messageId={m.id} />
+                            ))}
+
+                          {/* sources */}
+                          {!isUser && sourceParts.length > 0 && (
+                            <div className="mt-2 p-3 bg-orange-50 rounded border border-orange-200">
+                              <div className="flex items-center gap-2 mb-3">
+                                <BookOpen className="h-4 w-4 text-orange-600" />
+                                <span className="text-sm font-semibold text-orange-700">Medical Sources</span>
+                              </div>
+                              <SourceView sources={sourceParts.map((s) => s.source)} />
+                            </div>
+                          )}
+
+                          {/* attachments */}
+                          {isUser && m.experimental_attachments && m.experimental_attachments.length > 0 && (
+                            <div className="border-t pt-3 space-y-2">
+                              <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                                <FileIcon className="h-4 w-4 text-orange-600" />
+                                Medical Documents:
+                              </h4>
+                              {m.experimental_attachments.map((att, aIdx) => (
+                                <div
+                                  key={`att-${aIdx}`}
+                                  className="flex items-center gap-2 p-2 bg-orange-50 rounded border border-orange-200"
+                                >
+                                  <FileIcon className="h-4 w-4 text-orange-600" />
+                                  <Link
+                                    href={`?file=${att.name}`}
+                                    className="text-sm truncate hover:underline text-orange-600"
+                                  >
+                                    {att.name}
+                                  </Link>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* tools */}
+                          {hasTools && (
+                            <Accordion
+                              type="single"
+                              collapsible
+                              defaultValue="tools"
+                              className="border bg-orange-50 border-orange-200 rounded-lg"
+                            >
+                              <AccordionItem value="tools" className="border-0">
+                                <AccordionTrigger className="px-3 sm:px-4 py-2 text-sm font-medium">
+                                  <Activity className="h-4 w-4 text-orange-600 mr-2" />
+                                  <span className="text-orange-700">Medical Research Tools Used</span>
+                                </AccordionTrigger>
+                                <AccordionContent className="px-3 sm:px-4 pb-4 space-y-4">
+                                  {toolInvocationParts.map((part) => {
+                                    const { toolName, toolCallId } = part.toolInvocation;
+                                    switch (toolName) {
+                                      case "searchUserDocument":
+                                        return (
+                                          <DocumentSearchTool key={toolCallId} toolInvocation={part.toolInvocation} />
+                                        );
+                                      case "websiteSearchTool":
+                                        return (
+                                          <WebsiteSearchTool key={toolCallId} toolInvocation={part.toolInvocation} />
+                                        );
+                                      default:
+                                        return null;
+                                    }
+                                  })}
+                                </AccordionContent>
+                              </AccordionItem>
+                            </Accordion>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </li>
+                  );
+                })}
+                <ChatScrollAnchor trackVisibility={status === "streaming"} status={status} />
+              </ul>
+            )}
+          </div>
+
+          {/* ------------------------- MESSAGE INPUT ------------------------- */}
+          <div className="sticky bottom-0 mt-auto max-w-[720px] mx-auto w-full z-5 pb-2">
+            <MessageInput
+              chatId={chatId}
+              apiEndpoint={apiEndpoint}
+              currentChat={messages}
+              option={optimisticOption}
+              currentChatId={currentChatId}
+              modelType={optimisticModelType}
+              selectedOption={optimisticOption}
+              handleModelTypeChange={handleModelTypeChange}
+              handleOptionChange={handleOptionChange}
+            />
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default ChatComponent;
+export default EnhancedChatComponent;
 
