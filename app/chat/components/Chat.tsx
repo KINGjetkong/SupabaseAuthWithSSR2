@@ -184,9 +184,9 @@ const ChatComponent: React.FC<ChatProps> = ({
   ];
 
   const handleQuickAction = (action: typeof medicalQuickActions[0]) => {
-    const input = document.querySelector('textarea[placeholder*="medical"]');
+    const input = document.querySelector('textarea[placeholder*="medical"]') as HTMLTextAreaElement;
     if (input) {
-      (input as HTMLTextAreaElement).value = action.example;
+      input.value = action.example;
       input.focus();
       setShowWelcome(false);
     }
