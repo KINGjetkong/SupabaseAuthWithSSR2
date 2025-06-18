@@ -25,27 +25,7 @@ import MessageInput from './ChatMessageInput';
 import { toast } from 'sonner';
 
 // Icons from Lucide React
-import { 
-  Copy, 
-  CheckCircle, 
-  FileIcon, 
-  Stethoscope, 
-  Activity, 
-  Clock,
-  BookOpen,
-  FileText,
-  Calculator,
-  Users,
-  ChevronDown,
-  ClipboardList,
-  UserCheck,
-  Menu,
-  X,
-  Plus,
-  Sun,
-  Moon,
-  Folder
-} from 'lucide-react';
+import { Copy, CheckCircle, FileIcon, Stethoscope, Activity, Clock, BookOpen, FileText, Calculator, Users, ChevronDown, ClipboardList, UserCheck, Menu, X, Plus, Sun, Moon, Folder } from 'lucide-react';
 
 interface ChatProps {
   currentChat?: Message[];
@@ -184,9 +164,10 @@ const ChatComponent: React.FC<ChatProps> = ({
   ];
 
   const handleQuickAction = (action: typeof medicalQuickActions[0]) => {
-    const input = document.querySelector('textarea[placeholder*="medical"]')!;
+    // Fixed TypeScript error: Use proper type assertion with HTMLTextAreaElement
+    const input = document.querySelector('textarea[placeholder*="medical"]') as HTMLTextAreaElement;
     if (input) {
-      (input as HTMLTextAreaElement).value = action.example;
+      input.value = action.example;
       input.focus();
       setShowWelcome(false);
     }
@@ -629,4 +610,3 @@ const ChatComponent: React.FC<ChatProps> = ({
 };
 
 export default ChatComponent;
-
