@@ -35,7 +35,7 @@ import { setModelSettings } from "../actions";
 
 import { toast } from "sonner";
 
-// Medical icons - enhanced for healthcare
+// Medical icons
 import {
   Menu,
   X,
@@ -48,13 +48,6 @@ import {
   Clock,
   Stethoscope,
   UserCheck,
-  FileText,
-  Calculator,
-  ClipboardList,
-  Users,
-  BookOpen,
-  Plus,
-  ChevronDown,
 } from "lucide-react";
 
 interface ChatProps {
@@ -65,7 +58,7 @@ interface ChatProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                    MEDICAL AI CHAT - ENHANCED STYLING                     */
+/*                    MEDICAL ENHANCED CHAT - EXISTING STRUCTURE             */
 /* -------------------------------------------------------------------------- */
 
 const EnhancedChatComponent: React.FC<ChatProps> = ({
@@ -93,7 +86,6 @@ const EnhancedChatComponent: React.FC<ChatProps> = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(true);
 
   /* --------------------------- HANDLE SETTINGS --------------------------- */
   const handleModelTypeChange = async (val: string) => {
@@ -148,61 +140,10 @@ const EnhancedChatComponent: React.FC<ChatProps> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Hide welcome when messages exist
-  useEffect(() => {
-    if (messages.length > 0) {
-      setShowWelcome(false);
-    }
-  }, [messages.length]);
-
   /* --------------------------- THEME TOGGLER --------------------------- */
   const toggleTheme = () => {
     setDarkMode((prev) => !prev);
     document.documentElement.classList.toggle("dark");
-  };
-
-  /* ------------------------- MEDICAL QUICK ACTIONS ------------------------- */
-  const medicalQuickActions = [
-    {
-      title: "Prior Authorization",
-      description: "Generate prior auth letters",
-      icon: <FileText className="h-5 w-5" />,
-      example: "Draft a prior authorization letter for Ozempic for Type 2 diabetes",
-      color: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
-    },
-    {
-      title: "Clinical Calculations",
-      description: "Calculate medical scores",
-      icon: <Calculator className="h-5 w-5" />,
-      example: "Calculate CHA2DS2-VASc score for 72-year-old female with hypertension and diabetes",
-      color: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
-    },
-    {
-      title: "Clinical Guidelines",
-      description: "Access treatment protocols",
-      icon: <ClipboardList className="h-5 w-5" />,
-      example: "What are the latest AHA/ACC guidelines for hypertension in CKD patients?",
-      color: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
-    },
-    {
-      title: "Patient Care",
-      description: "Clinical decision support",
-      icon: <Users className="h-5 w-5" />,
-      example: "Construct a workup for new-onset atrial fibrillation",
-      color: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
-    }
-  ];
-
-  const handleQuickAction = (action: typeof medicalQuickActions[0]) => {
-    setShowWelcome(false);
-    // Focus the input after a short delay
-    setTimeout(() => {
-      const textarea = document.querySelector('textarea');
-      if (textarea && textarea instanceof HTMLTextAreaElement) {
-        textarea.value = action.example;
-        textarea.focus();
-      }
-    }, 100);
   };
 
   /* ---------------------------------------------------------------------- */
@@ -212,45 +153,20 @@ const EnhancedChatComponent: React.FC<ChatProps> = ({
   /* ------------------------------ SIDEBAR ------------------------------ */
   const SidebarContent = () => (
     <div className="flex flex-col h-full w-64 bg-background border-r border-border">
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-foreground">MDEvidence AI</h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white">
-          <Plus className="h-4 w-4 mr-2" />
-          New Medical Chat
+      <div className="p-4 border-b border-border flex items-center justify-between">
+        <h2 className="font-semibold text-orange-600">MDEvidence AI</h2>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        >
+          <X className="h-4 w-4" />
         </Button>
       </div>
-
-      {/* Chat History */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        <h3 className="text-sm font-medium text-muted-foreground mb-3">RECENT CONVERSATIONS</h3>
-        
-        {/* Mock medical conversations */}
-        {[
-          { title: "Hypertension treatment guidelines", time: "2 hours ago" },
-          { title: "Diabetes medication dosing", time: "Yesterday" },
-          { title: "Antibiotic resistance patterns", time: "2 days ago" },
-          { title: "Cardiac risk assessment", time: "1 week ago" }
-        ].map((conv, index) => (
-          <div key={index} className="p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors">
-            <div className="flex items-start space-x-2">
-              <div className="w-2 h-2 bg-orange-600 rounded-full mt-2 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{conv.title}</p>
-                <p className="text-xs text-muted-foreground">{conv.time}</p>
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* Real chat list - placeholder for future implementation */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 text-sm text-muted-foreground">
+        <p className="text-orange-600">Chat history will appear here when implemented.</p>
       </div>
     </div>
   );
@@ -258,10 +174,10 @@ const EnhancedChatComponent: React.FC<ChatProps> = ({
   /* ----------------------------- MAIN JSX ----------------------------- */
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
-      {/* ---------------------------- MEDICAL HEADER ---------------------------- */}
+      {/* ---------------------------- HEADER ---------------------------- */}
       <header className="sticky top-0 z-40 h-14 border-b border-border bg-background/90 backdrop-blur-md">
         <div className="flex h-full items-center justify-between px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* mobile menu */}
             {isMobile && (
               <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -287,27 +203,10 @@ const EnhancedChatComponent: React.FC<ChatProps> = ({
             </div>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            <Link href="/evidence" className="text-muted-foreground hover:text-foreground transition-colors">
-              Evidence Search
-            </Link>
-            <Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors">
-              About
-            </Link>
-            <Link href="/chat" className="text-orange-600 font-semibold">
-              Medical Chat
-            </Link>
-          </div>
-
           {/* right actions */}
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8">
               {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
-            <Button variant="outline" size="sm" className="hidden sm:flex">
-              Profile
-              <ChevronDown className="ml-1 h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -321,68 +220,19 @@ const EnhancedChatComponent: React.FC<ChatProps> = ({
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto">
             {messages.length === 0 ? (
-              /* Medical Welcome Screen */
-              <div className="flex flex-col items-center justify-center h-full px-4 py-8 bg-gradient-to-b from-orange-50/50 to-background">
-                <div className="w-full max-w-4xl mx-auto text-center space-y-8">
-                  {/* Medical Title */}
-                  <div className="space-y-4">
-                    <div className="inline-flex items-center px-3 py-1 bg-orange-100 rounded-full text-orange-700 text-sm font-medium">
-                      <Stethoscope className="w-4 h-4 mr-2" />
-                      AI-Powered Medical Guidance
-                    </div>
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
-                      <span className="text-orange-600 italic font-serif">MDEvidence</span>
-                    </h1>
-                    <p className="text-lg text-muted-foreground">
-                      AI-powered medical guidance based on current evidence
-                    </p>
-                  </div>
-
-                  {/* Medical Quick Actions Grid */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
-                    {medicalQuickActions.map((action, index) => (
-                      <Card 
-                        key={index} 
-                        className={`cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${action.color} border`}
-                        onClick={() => handleQuickAction(action)}
-                      >
-                        <CardContent className="p-6 text-center">
-                          <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                            {action.icon}
-                          </div>
-                          <h3 className="font-semibold text-sm mb-2">{action.title}</h3>
-                          <p className="text-xs opacity-80">{action.description}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-
-                  {/* Example Prompts */}
-                  <div className="space-y-4 max-w-3xl mx-auto">
-                    <h3 className="text-lg font-semibold text-foreground">Try these examples:</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {medicalQuickActions.map((action, index) => (
-                        <Card 
-                          key={index}
-                          className="cursor-pointer hover:bg-muted/50 transition-colors"
-                          onClick={() => handleQuickAction(action)}
-                        >
-                          <CardContent className="p-4">
-                            <p className="text-sm text-muted-foreground">
-                              {action.example}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Trust Message */}
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">
-                      Trusted by <span className="text-orange-600 font-semibold">healthcare professionals</span> worldwide for evidence-based medical guidance
-                    </p>
-                  </div>
+              <div className="flex flex-col items-center justify-center h-full px-4 text-center space-y-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-600 to-orange-700 rounded-2xl flex items-center justify-center mb-4">
+                  <Stethoscope className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-2xl font-semibold">
+                  <span className="text-orange-600">MDEvidence</span> Medical AI
+                </h2>
+                <p className="max-w-md text-muted-foreground">
+                  Ask medical questions and get evidence-based AI responses for healthcare professionals.
+                </p>
+                <div className="flex items-center gap-2 text-sm text-orange-600">
+                  <Stethoscope className="w-4 h-4" />
+                  <span>Trusted by healthcare professionals worldwide</span>
                 </div>
               </div>
             ) : (
@@ -487,10 +337,6 @@ const EnhancedChatComponent: React.FC<ChatProps> = ({
                           {/* sources */}
                           {!isUser && sourceParts.length > 0 && (
                             <div className="mt-2 p-3 bg-orange-50 rounded border border-orange-200">
-                              <div className="flex items-center gap-2 mb-3">
-                                <BookOpen className="h-4 w-4 text-orange-600" />
-                                <span className="text-sm font-semibold text-orange-700">Medical Sources</span>
-                              </div>
                               <SourceView sources={sourceParts.map((s) => s.source)} />
                             </div>
                           )}
@@ -498,10 +344,6 @@ const EnhancedChatComponent: React.FC<ChatProps> = ({
                           {/* attachments */}
                           {isUser && m.experimental_attachments && m.experimental_attachments.length > 0 && (
                             <div className="border-t pt-3 space-y-2">
-                              <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                                <FileIcon className="h-4 w-4 text-orange-600" />
-                                Medical Documents:
-                              </h4>
                               {m.experimental_attachments.map((att, aIdx) => (
                                 <div
                                   key={`att-${aIdx}`}
@@ -530,7 +372,7 @@ const EnhancedChatComponent: React.FC<ChatProps> = ({
                               <AccordionItem value="tools" className="border-0">
                                 <AccordionTrigger className="px-3 sm:px-4 py-2 text-sm font-medium">
                                   <Activity className="h-4 w-4 text-orange-600 mr-2" />
-                                  <span className="text-orange-700">Medical Research Tools Used</span>
+                                  Medical Research Tools Used
                                 </AccordionTrigger>
                                 <AccordionContent className="px-3 sm:px-4 pb-4 space-y-4">
                                   {toolInvocationParts.map((part) => {
