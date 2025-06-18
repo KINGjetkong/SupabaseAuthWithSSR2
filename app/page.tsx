@@ -13,7 +13,7 @@ export default function LandingPage() {
   return (
     <>
       {/* We pass the promise here and resolve it with react.use in the child to prevent the async request from blocking the UI */}
-      <BannerComponent session={getSession()} />
+      <BannerComponent />
       <FeatureCard />
       <Separator />
       <Testimonials />
